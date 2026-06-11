@@ -1,17 +1,19 @@
-{
-  "name": "menuai-backend",
-  "version": "1.0.0",
-  "description": "MenuAI — AI-powered menu website generator",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.18.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
-}
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+
+const app = express();
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
