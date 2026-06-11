@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MenuAI — Turn paper menus into websites</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e0e10;
+      --bg2: #16161a;
+      --bg3: #1e1e24;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #f0f0f2;
+      --muted: #8a8a9a;
+      --accent: #7c6af7;
+      --accent2: #a78bfa;
+      --accent-bg: rgba(124,106,247,0.12);
+      --accent-border: rgba(124,106,247,0.35);
+      --green: #34d399;
+      --green-bg: rgba(52,211,153,0.1);
+      --danger: #f87171;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(14,14,16,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: 'Sora', sans-serif;
+      font-size: 17px; font-weight: 700;
+      color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none;
+    }
+    .nav-logo span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .nav-badge {
+      font-size: 11px; padding: 2px 8px;
+      background: var(--accent-bg); border: 1px solid var(--accent-border);
+      color: var(--accent2); border-radius: 99px; font-weight: 500;
+    }
+
+    .hero {
+      max-width: 680px; margin: 0 auto;
+      padding: 4rem 1.5rem 2rem;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 500; color: var(--accent2);
+      background: var(--accent-bg); border: 1px solid var(--accent-border);
+      border-radius: 99px; padding: 4px 14px; margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(26px, 5vw, 40px);
+      font-weight: 700; line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 16px; color: var(--muted); max-width: 500px; margin: 0 auto 2.5rem;
+    }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      max-width: 680px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .upload-zone {
+      border: 1.5px dashed var(--border2);
+      border-radius: var(--radius);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--bg3);
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+    }
+    .upload-zone input {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon-wrap {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--accent-bg); border: 1px solid var(--accent-border);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem; font-size: 22px; color: var(--accent2);
+    }
+    .upload-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .upload-sub { font-size: 13px; color: var(--muted); }
+    .upload-sub b { color: var(--accent2); font-weight: 500; }
+
+    .photo-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px; margin-top: 1rem;
+    }
+    .photo-thumb {
+      position: relative; aspect-ratio: 3/4; border-radius: var(--radius-sm);
+      overflow: hidden; border: 1px solid var(--border2);
+    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-remove {
+      position: absolute; top: 4px; right: 4px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(0,0,0,0.75); color: #fff;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; opacity: 0; transition: opacity 0.15s;
+    }
+    .photo-thumb:hover .photo-remove { opacity: 1; }
+
+    .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+    .options-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    }
+    @media (max-width: 500px) { .options-grid { grid-template-columns: 1fr; } }
+
+    .option-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.9rem 1rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .option-card:hover { border-color: var(--border2); }
+    .option-card.active {
+      background: var(--accent-bg);
+      border-color: var(--accent-border);
+    }
+    .option-card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .option-icon { font-size: 18px; color: var(--muted); }
+    .option-card.active .option-icon { color: var(--accent2); }
+    .option-toggle {
+      width: 16px; height: 16px; border-radius: 4px;
+      border: 1.5px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: transparent;
+      transition: all 0.15s;
+    }
+    .option-card.active .option-toggle {
+      background: var(--accent); border-color: var(--accent); color: white;
+    }
+    .option-name { font-size: 13px; font-weight: 500; }
+    .option-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+    .lang-picker {
+      margin-top: 1rem;
+      background: var(--bg3); border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      padding: 0.9rem 1rem;
+      display: none;
+    }
+    .lang-picker.visible { display: block; }
+    .lang-picker p { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .lang-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lang-chip {
+      font-size: 12px; padding: 4px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--border2);
+      background: transparent; color: var(--muted);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .lang-chip:hover { color: var(--text); }
+    .lang-chip.on {
+      background: var(--accent-bg); border-color: var(--accent-border);
+      color: var(--accent2); font-weight: 500;
+    }
+
+    .btn-generate {
+      width: 100%; padding: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px; font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), #9f7aea);
+      color: white;
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 24px rgba(124,106,247,0.35);
+    }
+    .btn-generate:hover { opacity: 0.92; box-shadow: 0 6px 30px rgba(124,106,247,0.5); }
+    .btn-generate:active { transform: scale(0.99); }
+    .btn-generate:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+
+    .progress-area { margin-top: 1rem; display: none; }
+    .progress-steps { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .step-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--muted); transition: color 0.2s;
+    }
+    .step-row.active { color: var(--text); }
+    .step-row.done { color: var(--green); }
+    .step-dot {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1.5px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 11px; transition: all 0.2s;
+    }
+    .step-row.active .step-dot {
+      border-color: var(--accent2); color: var(--accent2);
+      animation: pulse 1.2s infinite;
+    }
+    .step-row.done .step-dot {
+      background: var(--green-bg); border-color: var(--green); color: var(--green);
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0.4); }
+      50% { box-shadow: 0 0 0 5px rgba(167,139,250,0); }
+    }
+    .progress-track {
+      background: var(--bg3); border-radius: 99px; height: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px; transition: width 0.5s ease; width: 0%;
+    }
+
+    .result-card {
+      max-width: 680px; margin: 0 auto 2rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: none;
+    }
+    .result-header {
+      padding: 1rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+    .result-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 500;
+    }
+    .result-title .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 6px var(--green);
+    }
+    .result-actions { display: flex; gap: 8px; }
+    .btn-sm {
+      font-size: 12px; padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border2);
+      background: var(--bg2); color: var(--text);
+      cursor: pointer; display: flex; align-items: center; gap: 5px;
+      transition: background 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-sm:hover { background: var(--bg3); }
+    .btn-sm.primary {
+      background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent2);
+    }
+    .browser-bar {
+      padding: 8px 12px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+    .browser-dots { display: flex; gap: 5px; }
+    .browser-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .browser-url {
+      flex: 1; background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px; padding: 3px 10px;
+      font-size: 11px; color: var(--muted);
+    }
+    iframe#sitePreview {
+      width: 100%; height: 560px; border: none; display: block; background: #fff;
+    }
+
+    .error-box {
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 13px; color: var(--danger);
+      margin-top: 1rem; display: none;
+    }
+
+    .how {
+      max-width: 680px; margin: 0 auto 2.5rem; padding: 0 1.5rem;
+    }
+    .how h2 {
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem;
+    }
+    .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 500px) { .how-steps { grid-template-columns: 1fr; } }
+    .how-step {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 1rem;
+    }
+    .how-step-num { font-size: 11px; font-weight: 600; color: var(--accent2); margin-bottom: 6px; }
+    .how-step-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+    .how-step-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    footer {
+      text-align: center; padding: 2.5rem 1rem;
+      font-size: 12px; color: var(--muted);
+      border-top: 1px solid var(--border);
+      max-width: 680px; margin: 0 auto;
+    }
+
+    .px { padding: 0 1.5rem; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-logo" href="#">
+      <i class="ti ti-qrcode" style="font-size:20px;color:var(--accent2)"></i>
+      Menu<span>AI</span>
+    </a>
+    <span class="nav-badge">Beta</span>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <i class="ti ti-wand" style="font-size:13px"></i>
+      Powered by Claude Vision
+    </div>
+    <h1>Turn any paper menu<br/>into a <em>live website</em></h1>
+    <p>Upload photos of a restaurant's menu — get a styled, multilingual website in under a minute.</p>
+  </div>
+
+  <div class="card px" style="max-width:680px;margin:0 auto 1rem;">
+
+    <div class="section-label">Menu photos</div>
+    <div class="upload-zone" id="dropZone">
+      <input type="file" id="fileInput" accept="image/*" multiple />
+      <div class="upload-icon-wrap"><i class="ti ti-camera-up"></i></div>
+      <p class="upload-title">Drop photos here or click to browse</p>
+      <p class="upload-sub">As many photos as you need — JPG, PNG, WEBP</p>
+    </div>
+    <div class="photo-grid" id="photoGrid"></div>
+
+    <div class="divider"></div>
+
+    <div class="section-label" style="margin-bottom:0.75rem">Enrich the website with</div>
+    <div class="options-grid">
+      <div class="option-card" id="opt-lang" onclick="toggleOpt('lang')">
+        <div class="option-card-head">
+          <i class="ti ti-language option-icon"></i>
+          <div class="option-toggle"><i class="ti ti-check"></i></div>
+        </div>
+        <div class="option-name">Languages</div>
+        <div class="option-desc">Let visitors switch the menu language</div>
+      </div>
+      <div class="option-card" id="opt-cal" onclick="toggleOpt('cal')">
+        <div class="option-card-head">
+          <i class="ti ti-flame option-icon"></i>
+          <div class="option-toggle"><i class="ti ti-check"></i></div>
+        </div>
+        <div class="option-name">Calories</div>
+        <div class="option-desc">Add estimated kcal per dish</div>
+      </div>
+      <div class="option-card" id="opt-allergy" onclick="toggleOpt('allergy')">
+        <div class="option-card-head">
+          <i class="ti ti-alert-triangle option-icon"></i>
+          <div class="option-toggle"><i class="ti ti-check"></i></div>
+        </div>
+        <div class="option-name">Allergens</div>
+        <div class="option-desc">EU-standard allergen badges</div>
+      </div>
+    </div>
+
+    <div class="lang-picker" id="langPicker">
+      <p>Choose languages to add</p>
+      <div class="lang-chips">
+        <div class="lang-chip on" data-lang="English" onclick="toggleLang(this)">🇬🇧 English</div>
+        <div class="lang-chip" data-lang="French" onclick="toggleLang(this)">🇫🇷 Français</div>
+        <div class="lang-chip" data-lang="Arabic" onclick="toggleLang(this)">🇹🇳 العربية</div>
+        <div class="lang-chip" data-lang="Italian" onclick="toggleLang(this)">🇮🇹 Italiano</div>
+        <div class="lang-chip" data-lang="German" onclick="toggleLang(this)">🇩🇪 Deutsch</div>
+        <div class="lang-chip" data-lang="Spanish" onclick="toggleLang(this)">🇪🇸 Español</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="btn-generate" id="generateBtn" onclick="generate()" disabled>
+      <i class="ti ti-wand"></i>
+      Generate menu website
+    </button>
+
+    <div class="progress-area" id="progressArea">
+      <div class="progress-steps">
+        <div class="step-row" id="s1">
+          <div class="step-dot"><i class="ti ti-eye"></i></div>
+          Reading the menu from your photos
+        </div>
+        <div class="step-row" id="s2">
+          <div class="step-dot"><i class="ti ti-palette"></i></div>
+          Extracting theme, colors & structure
+        </div>
+        <div class="step-row" id="s3">
+          <div class="step-dot"><i class="ti ti-code"></i></div>
+          Building your website
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <div class="result-card" id="resultCard" style="max-width:680px;margin:0 auto 2rem;">
+    <div class="result-header">
+      <div class="result-title">
+        <div class="dot"></div>
+        Website ready
+      </div>
+      <div class="result-actions">
+        <button class="btn-sm" onclick="copyHTML()"><i class="ti ti-copy"></i> Copy HTML</button>
+        <button class="btn-sm primary" onclick="downloadHTML()"><i class="ti ti-download"></i> Download</button>
+      </div>
+    </div>
+    <div class="browser-bar">
+      <div class="browser-dots">
+        <div class="browser-dot" style="background:#ff5f57"></div>
+        <div class="browser-dot" style="background:#febc2e"></div>
+        <div class="browser-dot" style="background:#28c840"></div>
+      </div>
+      <div class="browser-url" id="browserUrl">menuai://preview</div>
+    </div>
+    <iframe id="sitePreview" title="Generated menu website" sandbox="allow-scripts allow-same-origin"></iframe>
+  </div>
+
+  <div class="how">
+    <h2>How it works</h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-step-num">Step 1</div>
+        <div class="how-step-title">Upload photos</div>
+        <div class="how-step-desc">Take as many photos as needed. Each page, each section — more photos = better accuracy.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">Step 2</div>
+        <div class="how-step-title">AI reads everything</div>
+        <div class="how-step-desc">Claude Vision extracts all dishes, prices, colors, and visual style from the photos.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">Step 3</div>
+        <div class="how-step-title">Get your website</div>
+        <div class="how-step-desc">Download the HTML file and host it anywhere — or link it directly to a QR code.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Built with Claude Vision API · MenuAI Beta</footer>
+
+<script>
+  // ── calls your own backend, not Anthropic directly ──
+  const API_URL = '/api/claude';
+
+  let files = [];
+  let generatedHTML = '';
+  const opts = { lang: false, cal: false, allergy: false };
+  const selectedLangs = new Set(['English']);
+
+  const fileInput   = document.getElementById('fileInput');
+  const dropZone    = document.getElementById('dropZone');
+  const photoGrid   = document.getElementById('photoGrid');
+  const generateBtn = document.getElementById('generateBtn');
+  const progressArea = document.getElementById('progressArea');
+  const progressFill = document.getElementById('progressFill');
+  const errorBox    = document.getElementById('errorBox');
+  const resultCard  = document.getElementById('resultCard');
+  const sitePreview = document.getElementById('sitePreview');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    handleFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+  });
+  fileInput.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
+
+  function handleFiles(newFiles) {
+    files = [...files, ...newFiles].slice(0, 20);
+    renderThumbs();
+    generateBtn.disabled = files.length === 0;
+  }
+
+  function renderThumbs() {
+    photoGrid.innerHTML = '';
+    files.forEach((f, i) => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const wrap = document.createElement('div');
+        wrap.className = 'photo-thumb';
+        wrap.innerHTML = `<img src="${ev.target.result}" alt="menu photo ${i+1}"/>
+          <button class="photo-remove" onclick="removePhoto(${i})"><i class="ti ti-x"></i></button>`;
+        photoGrid.appendChild(wrap);
+      };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  function removePhoto(i) {
+    files.splice(i, 1); renderThumbs();
+    generateBtn.disabled = files.length === 0;
+  }
+
+  function toggleOpt(key) {
+    opts[key] = !opts[key];
+    document.getElementById('opt-' + key).classList.toggle('active', opts[key]);
+    if (key === 'lang') document.getElementById('langPicker').classList.toggle('visible', opts.lang);
+  }
+
+  function toggleLang(el) {
+    const lang = el.dataset.lang;
+    if (selectedLangs.has(lang)) {
+      if (selectedLangs.size > 1) { selectedLangs.delete(lang); el.classList.remove('on'); }
+    } else { selectedLangs.add(lang); el.classList.add('on'); }
+  }
+
+  function setStep(n, state) { document.getElementById('s' + n).className = 'step-row ' + state; }
+  function setProgress(p) { progressFill.style.width = p + '%'; }
+
+  function showError(msg) {
+    errorBox.textContent = msg; errorBox.style.display = 'block';
+    progressArea.style.display = 'none'; generateBtn.disabled = false;
+  }
+
+  async function fileToBase64(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = () => rej(new Error('Read failed'));
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function callClaude(body) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || data.error || 'API error');
+    return data;
+  }
+
+  async function generate() {
+    if (!files.length) return;
+    generateBtn.disabled = true;
+    errorBox.style.display = 'none';
+    resultCard.style.display = 'none';
+    progressArea.style.display = 'block';
+    setStep(1,'active'); setStep(2,''); setStep(3,'');
+    setProgress(5);
+
+    try {
+      const imageBlocks = await Promise.all(files.map(async f => ({
+        type: 'image',
+        source: { type: 'base64', media_type: f.type || 'image/jpeg', data: await fileToBase64(f) }
+      })));
+
+      setProgress(15);
+
+      // ── Step 1: Extract menu data ──
+      const extractPrompt = `You are a menu digitization expert. Analyze these menu photos with extreme attention to detail.
+
+Extract everything:
+1. Restaurant/café name, tagline, any subtitle
+2. Visual DNA: exact dominant colors as hex codes, font personality (serif/sans/script/handwritten/bold/light), overall mood (rustic/modern/elegant/casual/minimalist/vintage/luxurious/playful), decorative elements, background texture or color
+3. Layout style (dense-columns / spaced-cards / simple-list / elegant-centered / grid)
+4. All sections/categories with their exact names
+5. Every single item: name, description, price, any visible dietary markers or icons
+
+Return ONLY valid JSON, nothing else, no markdown:
+{
+  "restaurant": { "name": "", "tagline": "", "type": "café|restaurant|bistro|etc", "address": "" },
+  "theme": {
+    "primaryColor": "#hex",
+    "secondaryColor": "#hex",
+    "accentColor": "#hex",
+    "backgroundColor": "#hex",
+    "cardColor": "#hex",
+    "textColor": "#hex",
+    "textSecondary": "#hex",
+    "fontStyle": "serif|sans-serif|script|mixed",
+    "fontPersonality": "3-5 word description",
+    "mood": "rustic|modern|elegant|casual|minimalist|vintage|luxurious|playful",
+    "layout": "dense-columns|spaced-cards|simple-list|elegant-centered|grid",
+    "decorativeElements": "detailed description"
+  },
+  "sections": [
+    {
+      "name": "section name",
+      "subtitle": "optional subtitle",
+      "items": [
+        { "name": "", "description": "", "price": "", "badges": [], "highlight": false }
+      ]
+    }
+  ],
+  "currency": "TND|EUR|USD|etc",
+  "originalLanguage": "fr|ar|en|etc",
+  "notes": "opening hours, wifi, socials, etc if visible"
+}`;
+
+      const d1 = await callClaude({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: extractPrompt }] }]
+      });
+
+      const rawJSON = d1.content.map(b => b.text || '').join('').replace(/```json|```/g,'').trim();
+      let menu;
+      try { menu = JSON.parse(rawJSON); }
+      catch(e) { throw new Error('Could not parse menu. Please use clearer, well-lit photos.'); }
+
+      setStep(1,'done'); setStep(2,'done'); setStep(3,'active');
+      setProgress(55);
+
+      // ── Step 2: Build website ──
+      const langs = opts.lang ? Array.from(selectedLangs) : [];
+      const enrichments = [];
+
+      if (opts.lang && langs.length > 0) {
+        enrichments.push(`LANGUAGE SWITCHER: Add a sticky language switcher. Languages: ${langs.join(', ')}.
+- All text in JS translation objects keyed by lang code
+- Arabic requires dir="rtl" on content when active
+- Translate ALL visible text including section names, item names, descriptions`);
+      }
+      if (opts.cal) {
+        enrichments.push(`CALORIES: Add estimated kcal to each item using culinary knowledge.
+- Show as small muted badge near the price (e.g. "320 kcal")
+- Style consistently with the theme`);
+      }
+      if (opts.allergy) {
+        enrichments.push(`ALLERGENS: Add EU 14 allergen badges to every item.
+- Allergens: Gluten, Dairy, Eggs, Nuts, Peanuts, Soy, Fish, Shellfish, Sesame, Celery, Mustard, Lupin, Molluscs, Sulphites
+- Small colored icon badges, legend at the bottom
+- Estimate from typical ingredients if not shown`);
+      }
+
+      const buildPrompt = `You are an elite web designer. Create a stunning single-file HTML menu website.
+
+Menu data:
+${JSON.stringify(menu, null, 2)}
+
+DESIGN MANDATE — FAITHFULLY REPLICATE THE ORIGINAL MENU'S VISUAL IDENTITY:
+- Use the EXACT color palette from theme data
+- Match the font personality: load appropriate Google Fonts
+  (serif mood → Playfair Display or Cormorant; script → Dancing Script; modern → Inter or DM Sans; vintage → Libre Baskerville)
+- Replicate the layout: "${menu.theme?.layout || 'spaced-cards'}"
+- Mood is "${menu.theme?.mood || 'elegant'}" — every decision must serve this
+- Recreate decorative elements in CSS
+${enrichments.join('\n')}
+
+TECHNICAL REQUIREMENTS:
+- Single complete HTML file — ALL CSS and JS inline, no external dependencies except Google Fonts
+- Sticky category nav if 3+ sections (use theme colors)
+- Smooth scroll between sections
+- Beautiful hover states on menu items
+- Mobile-first responsive
+- Subtle page-load fade-in animation
+- Print stylesheet (clean black & white)
+- If original language is Arabic, default RTL layout
+
+CRITICAL: Return ONLY the complete HTML. No explanations. No markdown. No backticks. Start with <!DOCTYPE html>.`;
+
+      const d2 = await callClaude({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
+        messages: [{ role: 'user', content: buildPrompt }]
+      });
+
+      generatedHTML = d2.content.map(b => b.text || '').join('').replace(/^```html\n?|```$/g,'').trim();
+
+      setStep(3,'done'); setProgress(100);
+
+      setTimeout(() => {
+        progressArea.style.display = 'none';
+        resultCard.style.display = 'block';
+        const blob = new Blob([generatedHTML], { type: 'text/html' });
+        sitePreview.src = URL.createObjectURL(blob);
+        const name = menu.restaurant?.name || 'menu';
+        document.getElementById('browserUrl').textContent = name.toLowerCase().replace(/\s+/g,'-') + '.html';
+        resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+
+    } catch(err) {
+      showError('Error: ' + err.message);
+    } finally {
+      generateBtn.disabled = false;
+    }
+  }
+
+  function copyHTML() {
+    if (!generatedHTML) return;
+    navigator.clipboard.writeText(generatedHTML).then(() => {
+      const btn = event.target.closest('button');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="ti ti-check"></i> Copied!';
+      setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    });
+  }
+
+  function downloadHTML() {
+    if (!generatedHTML) return;
+    const name = document.getElementById('browserUrl').textContent || 'menu.html';
+    const blob = new Blob([generatedHTML], { type: 'text/html' });
+    const a = document.createElement('a'); 
+    a.href = URL.createObjectURL(blob);
+    a.download = name.endsWith('.html') ? name : name + '.html';
+    a.click();
+  }
+</script>
+</body>
+</html>
